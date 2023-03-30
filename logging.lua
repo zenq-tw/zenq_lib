@@ -23,7 +23,7 @@ local LogLvl = {
     info=20,
     error=30,
 }
-logging.lvl = ztable.deepcopy(LogLvl)  ---@type {[string]: LogLvl}
+logging.lvl = ztable.deepcopy(LogLvl)  ---@type {debug: LogLvl, info: LogLvl, error: LogLvl}
 logging.log_lvl_lookup = ztable.indexed_to_lookup(LogLvl)
 
 ---@type number

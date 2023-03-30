@@ -12,7 +12,7 @@ local t = {}
 --- Returns another table containing all records in the supplied indexed table, except with the values set to keys. The values in the returned table will be <code>true</code> for all records.
 ---@generic V
 ---@param indexed V[]
----@param size? integer
+---@param size? integer if the array size is already calculated - you can pass it here
 ---@return LookupTable<V>
 function t.indexed_to_lookup(indexed, size)
     size = size or #indexed

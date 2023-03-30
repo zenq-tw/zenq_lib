@@ -4,6 +4,12 @@ local zlib_table = require('zlib.table')
 local functools = {}
 
 
+---@type {table: TFactory<table>, string: TFactory<string>, number: TFactory<number>}
+functools.factories = {
+    table = (function (key) return {} end),
+    string = (function (key) return '' end),
+    number = (function (key) return 0 end),
+}
 
 
 ---Lazy execution of supplied function

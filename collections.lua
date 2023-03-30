@@ -1,3 +1,6 @@
+local zlib_functools = require('zlib.functools')
+
+
 local collections = {}
 
 --==================================================================================================================================--
@@ -15,23 +18,13 @@ end
 --==================================================================================================================================--
 
 
----@type {table: TFactory<table>, string: TFactory<string>, number: TFactory<number>}
-local type_factories = {
-    table = (function (key) return {} end),
-    string = (function (key) return '' end),
-    number = (function (key) return 0 end),
-}
-
-collections.type_factories = type_factories
-
-
 ---@generic K, V
 ---@param default_value_factory TFactory<V>
 ---@return defaultdict<K, V>
 function collections.defaultdict(default_value_factory)
     if type(default_value_factory) ~= 'function' then
-        if type(default_value_factory) == 'string' and type_factories[default_value_factory] ~= nil then
-            default_value_factory = type_factories[default_value_factory]
+        if type(default_value_factory) == 'string' and zlib_functools.factories[default_value_factory] ~= nil then
+            default_value_factory = zlib_functools.factories[default_value_factory]
         else
             error('invalid default value factory')
         end

@@ -12,10 +12,6 @@ local logging = {}
 --]]
 
 
----@alias AvailableOpenFileMod
----| 'w' open for write (will clear all existed content)
----| 'a' same, but will append to file
-
 
 local DEFAULT_MAX_DUMPED_TABLE_LEN = 150
 
@@ -31,7 +27,7 @@ logging.lvl = ztable.deepcopy(LogLvl)  ---@type {[string]: LogLvl}
 logging.log_lvl_lookup = ztable.indexed_to_lookup(LogLvl)
 
 ---@type number
-LogLvl.deactivated = 0/0  --  == `NaN` == `-1.#IND` ->  all numeric comparisons will return false
+local LOGGING_DEACTIVATED_LVL = 0/0  --  == `NaN` == `-1.#IND` ->  all numeric comparisons will return false
 
 
 
@@ -59,11 +55,9 @@ end
 ---@field private _logging_level_file_path string path to file that contain current logging level
 ---@field private _write_log fun(msg: string): nil
 ---@field private __index LoggerCls
-local LoggerCls = {
+logging.Logger = {
     _logging_level_file_path='data/script/enable_console_logging',
 }
-
-logging.Logger = LoggerCls
 
 
 
@@ -82,10 +76,12 @@ logging.Logger = LoggerCls
 ---@param clear_existed_log? boolean [default `true`]
 ---@param max_dumped_table_len? integer table dump in message will be truncated when this value is exceeded
 ---@return Cls
-function LoggerCls.new(cls, logger_name, log_lvl, clear_existed_log, max_dumped_table_len)
-    if not is_valid_log_lvl(log_lvl)                then log_lvl = LogLvl.deactivated                        end
+function logging.Logger.new(cls, logger_name, log_lvl, clear_existed_log, max_dumped_table_len)
+    if not is_valid_log_lvl(log_lvl)                then log_lvl = LOGGING_DEACTIVATED_LVL                   end
     if not ztypes.is_boolean(clear_existed_log)     then clear_existed_log = true                            end
     if not ztypes.is_number(max_dumped_table_len)   then max_dumped_table_len = DEFAULT_MAX_DUMPED_TABLE_LEN end
+
+    ---@cast log_lvl LogLvl
 
 
     cls.__index = cls
@@ -96,7 +92,7 @@ function LoggerCls.new(cls, logger_name, log_lvl, clear_existed_log, max_dumped_
     self._context_stack = {}
     self._context_chain_dumped = ''
     self._is_newstring = true
-    self._current_log_level = LogLvl.deactivated
+    self._current_log_level = log_lvl
 
 
     if logger_name == nil then
@@ -116,27 +112,27 @@ end
 
 
 ---Log debug varargs. Will concatenate all arguments into log record: ('a', 1, true) -> 'a 1 true'
----@return LoggerCls
-function LoggerCls:debug(...) 
+---@return self
+function logging.Logger:debug(...) 
     return self:_log(arg, LogLvl.debug)
 end
 
 ---Log info varargs. Will concatenate all arguments into log record: ('a', 1, true) -> 'a 1 true'
----@return LoggerCls
-function LoggerCls:info(...) 
+---@return self
+function logging.Logger:info(...) 
     return self:_log(arg, LogLvl.info)
 end
 
 ---Log error varargs. Will concatenate all arguments into log record: ('a', 1, true) -> 'a 1 true'
----@return LoggerCls
-function LoggerCls:error(...) 
+---@return self
+function logging.Logger:error(...) 
     return self:_log(arg, LogLvl.error)
 end
 
 
 ---Log error varargs. Same as log:error(), but will add a stacktrace
----@return LoggerCls
-function LoggerCls:exception(...) 
+---@return self
+function logging.Logger:exception(...) 
     return self:_log(arg, LogLvl.error, true)
 end
 
@@ -148,8 +144,8 @@ end
 ---@param ignore_indent? boolean ignore indentation lvl (in case of logging in same line again)
 ---@param eval_functions? boolean
 ---@param dump_tables? boolean
----@return LoggerCls
-function LoggerCls:log_ext(msg, log_lvl, add_new_line, ignore_indent, eval_functions, dump_tables)
+---@return self
+function logging.Logger:log_ext(msg, log_lvl, add_new_line, ignore_indent, eval_functions, dump_tables)
     if not is_valid_log_lvl(log_lvl)       then     log_lvl = LogLvl.debug  end  ---@cast log_lvl LogLvl
     if not self:is_enabled_for(log_lvl)    then     return self             end
     if not ztypes.is_boolean(add_new_line) then     add_new_line = true     end
@@ -186,7 +182,7 @@ end
 ---set current logging level
 ---@param lvl LogLvl `lvl.debug` | `lvl.info` | `lvl.error` or any other numeric value
 ---@return boolean is_loglvl_set
-function LoggerCls:set_log_lvl(lvl)
+function logging.Logger:set_log_lvl(lvl)
     if not is_valid_log_lvl(lvl) then   return false    end  
     
     self._current_log_level = lvl
@@ -195,7 +191,7 @@ end
 
 ---get current allowed level of messages in log
 ---@return LogLvl
-function LoggerCls:get_current_log_lvl()
+function logging.Logger:get_current_log_lvl()
     return self._current_log_level
 end
 
@@ -211,19 +207,19 @@ end
 ---@nodiscard
 ---@param lvl LogLvl
 ---@return boolean
-function LoggerCls:is_enabled_for(lvl)
+function logging.Logger:is_enabled_for(lvl)
     return self._current_log_level <= lvl
 end
 
 ---force logging off (regardless of initial settings)
 ---@return nil
-function LoggerCls:deactivate()
-    self._current_log_level = LogLvl.deactivated
+function logging.Logger:deactivate()
+    self._current_log_level = LOGGING_DEACTIVATED_LVL
 end
 
 
----@return LoggerCls
-function LoggerCls:add_indent()
+---@return self
+function logging.Logger:add_indent()
     self._indent_lvl = self._indent_lvl + 1
     self._indent = self._indent .. '  '
 
@@ -231,8 +227,8 @@ function LoggerCls:add_indent()
 end
 
 
----@return LoggerCls
-function LoggerCls:remove_indent()
+---@return self
+function logging.Logger:remove_indent()
     if self._indent_lvl == 0    then    return self     end
 
     self._indent_lvl = self._indent_lvl - 1
@@ -243,8 +239,8 @@ end
 
 
 ---@vararg string
----@return LoggerCls
-function LoggerCls:enter_context(...)
+---@return self
+function logging.Logger:enter_context(...)
     local merged_context = table.concat(arg, '][')
 
     table.insert(self._context_stack, merged_context)
@@ -254,8 +250,8 @@ function LoggerCls:enter_context(...)
 end
 
 
----@return LoggerCls
-function LoggerCls:leave_context()
+---@return self
+function logging.Logger:leave_context()
     local context_name = table.remove(self._context_stack)
     self._context_chain_dumped = string.sub(self._context_chain_dumped, 1, -(#context_name + 2 + 1))
 
@@ -272,7 +268,7 @@ end
 ---@protected
 ---@param tbl table
 ---@return string
-function LoggerCls:_dump_table(tbl)
+function logging.Logger:_dump_table(tbl)
     local buffer, buffer_new_id, result_string_len = {}, 0, 0
     local temp_string
 
@@ -297,7 +293,7 @@ end
 ---@protected
 ---@param func fun(...)
 ---@return string
-function LoggerCls:_get_function_result(func)
+function logging.Logger:_get_function_result(func)
     local is_success_eval, returned_data = pcall(func)
 
     if is_success_eval then
@@ -313,7 +309,7 @@ end
 ---@param lvl LogLvl
 ---@param add_traceback? boolean
 ---@return LoggerCls
-function LoggerCls:_log(args, lvl, add_traceback)
+function logging.Logger:_log(args, lvl, add_traceback)
     if not self:is_enabled_for(lvl) then    return self     end
     
     local dumped_values = {}
@@ -354,7 +350,7 @@ end
 ---@protected
 ---@param msg string 
 ---@return string
-function LoggerCls:_prepend_context(msg)
+function logging.Logger:_prepend_context(msg)
     if self._is_newstring and #self._context_stack > 0 then
         msg = self._context_chain_dumped .. ' ' .. msg
     end
@@ -366,7 +362,7 @@ end
 ---@protected
 ---@param mod? AvailableOpenFileMod `'a'` is default
 ---@return file*
-function LoggerCls:_open_log_file(mod)
+function logging.Logger:_open_log_file(mod)
     mod = mod or 'a'
 
     if not (mod == 'a' or mod == 'w') then
@@ -383,7 +379,7 @@ end
 ---check that file can be opened and also clear its content from previous executions
 ---@protected
 ---@return nil
-function LoggerCls:_create_file_or_clear_content()
+function logging.Logger:_create_file_or_clear_content()
     local file = self:_open_log_file('w')
     file:close()
 end
@@ -392,7 +388,7 @@ end
 ---@protected
 ---@param msg string 
 ---@return nil
-function LoggerCls:_append_to_log_file(msg)
+function logging.Logger:_append_to_log_file(msg)
     local file = self:_open_log_file('a')
 
     file:write(msg)

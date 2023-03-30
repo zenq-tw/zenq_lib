@@ -5,8 +5,6 @@ local collections = {}
 --==================================================================================================================================--
 
 
----@alias WeakValueTable<K, V> {[K]: V}
-
 function collections.weak_value_table() 
     return setmetatable({}, {__mode='v'})
 end
@@ -16,8 +14,6 @@ end
 --                                                          defaultdict
 --==================================================================================================================================--
 
----@generic T
----@alias TFactory<T> fun(key: any): T
 
 ---@type {table: TFactory<table>, string: TFactory<string>, number: TFactory<number>}
 local type_factories = {
@@ -28,9 +24,6 @@ local type_factories = {
 
 collections.type_factories = type_factories
 
-
----@generic K, V
----@alias defaultdict<K, V>  {[K]: V}
 
 ---@generic K, V
 ---@param default_value_factory TFactory<V>
@@ -54,23 +47,10 @@ function collections.defaultdict(default_value_factory)
 end
 
 
--- --TODO: remove
--- local d = defaultdict('table')
-
--- print(type(d['a']))
-
--- table.insert(d['b'], 'x')
-
--- print(type(d['b']))
--- print(d['b'][1])
-
-
 --==================================================================================================================================--
 --                                                        NonOverwritableDict
 --==================================================================================================================================--
 
-
----@alias TNonRewritableDict<K, V> {[K]: V}
 
 ---### will raise error on key overwriting
 ---@param dict_id_hint? string string identifying the dictionary in the raised error message
@@ -78,7 +58,7 @@ end
 ---@param allow_same_values_assignment? boolean default is `true`
 ---@return table
 ---to drop all current content perform call on instance: `dict_instance()`
-collections.NonRewritableDict = function (dict_id_hint, nil_values, allow_same_values_assignment)
+function collections.NonRewritableDict (dict_id_hint, nil_values, allow_same_values_assignment)
     if type(nil_values) ~= "boolean" then nil_values = false end
     if type(allow_same_values_assignment) ~= "boolean" then allow_same_values_assignment = true end
 

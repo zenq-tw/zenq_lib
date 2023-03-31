@@ -8,6 +8,7 @@ local collections = {}
 --==================================================================================================================================--
 
 
+---@return WeakValueTable
 function collections.weak_value_table() 
     return setmetatable({}, {__mode='v'})
 end
@@ -49,7 +50,7 @@ end
 ---@param dict_id_hint? string string identifying the dictionary in the raised error message
 ---@param nil_values? boolean default is `false`
 ---@param allow_same_values_assignment? boolean default is `true`
----@return table
+---@return TNonRewritableDict
 ---to drop all current content perform call on instance: `dict_instance()`
 function collections.NonRewritableDict (dict_id_hint, nil_values, allow_same_values_assignment)
     if type(nil_values) ~= "boolean" then nil_values = false end

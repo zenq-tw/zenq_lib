@@ -88,6 +88,9 @@ end
 
 
 --Author: Vandy (Groove Wizard)
+---@generic T
+---@param tbl T
+---@return T 
 function t.deepcopy(tbl)
 	local ret = {}
 	for k, v in pairs(tbl) do

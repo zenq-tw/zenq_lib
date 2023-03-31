@@ -1,4 +1,4 @@
-local zlib_functools = require('zlib.functools')
+local zlib_functools = require('_functools')
 
 
 local collections = {}

@@ -1,5 +1,5 @@
-local ztable = require('zlib.table')
-local ztypes = require('zlib.types')
+local ztable = require('_table')
+local ztypes = require('_types')
 
 
 local logging = {}

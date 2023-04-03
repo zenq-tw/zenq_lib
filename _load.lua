@@ -42,12 +42,12 @@ local _lib_load_path = ''
 local function _load_module_in_environment(dotted_module_path, env)
     local file_path = dotted_module_path:gsub('%.', '/') .. '.lua'
 
-    local file = loadfile(file_path)  --FIXME: remove
+    local file = loadfile(file_path)
     if not file then return end  --TODO: add err msg?
 
     setfenv(file, env)
 
-    local is_success, retval = pcall(file, dotted_module_path)  --FIXME: remove
+    local is_success, retval = pcall(file, dotted_module_path)
     if not is_success then return end  --TODO: add err msg?
     return retval
 end

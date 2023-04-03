@@ -1,22 +1,21 @@
-local original_package_path = package.path
-print(string.match('script.db_reader.zlib.header', '^(.+)%.header'))
-local parent_dir_path = assert((...):match('^(.+)%.header'), 'failed to setup library')
-local lib_path = parent_dir_path:gsub('%.', '/') .. '/?.lua'
+---@diagnostic disable: invisible
 
-if not package.path:match(lib_path) then
-    package.path = lib_path .. ';' .. package.path
-end
+local parent_dir_path = assert((...):match('^(.+)%.header'), 'failed to setup library')
+
+
+local _load      = assert(core:load_global_script(parent_dir_path .. '._load'))   ---@module "_load"
+_load.__setup_lib_load_path(...)
+_load.__setup_lib_load_path = nil
 
 
 local lib = {
-    types       = require('_types'),        ---@module "_types"
-    table       = require('_table'),        ---@module "_table"
-    functools   = require('_functools'),    ---@module "_functools"
-    collections = require('_collections'),  ---@module "_collections"
-    logging     = require('_logging'),      ---@module "_logging"
+    load        = _load,
+    types       = assert(core:load_global_script(parent_dir_path .. '._types')),            ---@module "_types"
+    table       = assert(core:load_global_script(parent_dir_path .. '._table')),            ---@module "_table"
+    functools   = assert(core:load_global_script(parent_dir_path .. '._functools')),        ---@module "_functools"
+    collections = assert(core:load_global_script(parent_dir_path .. '._collections')),      ---@module "_collections"
+    logging     = assert(core:load_global_script(parent_dir_path .. '._logging')),          ---@module "_logging"
 }
 
-
-package.path = original_package_path
 
 return lib

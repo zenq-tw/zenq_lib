@@ -1,4 +1,4 @@
-local zlib_table = require('_table')
+local zlib_table = require('._table')
 
 
 local functools = {}

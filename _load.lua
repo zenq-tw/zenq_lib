@@ -10,8 +10,11 @@ local load = {}
 ---@return nil | any # anything that returns a package or anything returned by an initialization function (if `exec=true`)
 ---* __~may be buggy~, but should't)__
 ---* package will be loaded in patched environment that allows relative imports
----* to use relative import put a dot (`.`) at the beginning of the module path, for example: `require('.local_module')`
----* if something goes wrong, no error will be thrown - use the `assert` statement to check if everything is ok
+---     * to use relative import put a **dot (.)** at the beginning of the module path, for example: **require('.local_module')**
+---* if something goes wrong, no error will be thrown -> use **assert** statement to check if everything is ok
+---* this library will be injected into the loaded package scope -> **assert(\<lib_folder_name\>) == \<lib\>**
+---     * **\<lib_folder_name\>** - name of folder where you placed zenq_lib (eg: _script/my_mod/zlib_ -> _\<lib_folder_name\>_ = **'zlib'**)
+---     * **\<lib\>** - table representing zenq_lib (what is returned after importing _\<lib_folder_name\>.header_)
 ---* _NOTE: You should not use this function for import 'zlib' package itself_
 function load.package(pkg, exec, ...)
     return load.init_lib_file(pkg, 'init', exec, ...)
@@ -25,8 +28,11 @@ end
 ---@return nil | any # anything that returns a package or anything returned by an initialization function (if `exec=true`)
 ---* __~may be buggy~, but should't)__
 ---* package will be loaded in patched environment that allows relative imports
----* to use relative import put a dot (`.`) at the beginning of the module path, for example: `require('.local_module')`
----* if something goes wrong, no error will be thrown - use the `assert` statement to check if everything is ok
+---     * to use relative import put a **dot (.)** at the beginning of the module path, for example: **require('.local_module')**
+---* if something goes wrong, no error will be thrown -> use **assert** statement to check if everything is ok
+---* this library will be injected into the loaded package scope -> **assert(\<lib_folder_name\>) == \<lib\>**
+---     * **\<lib_folder_name\>** - name of folder where you placed zenq_lib (eg: _script/my_mod/zlib_ -> _\<lib_folder_name\>_ = **'zlib'**)
+---     * **\<lib\>** - table representing zenq_lib (what is returned after importing _\<lib_folder_name\>.header_)
 ---* _NOTE: You should not use this function for import 'zlib' package itself_
 function load.lib(lib, exec, ...)
     return load.init_lib_file(lib, 'header', exec, ...)
@@ -35,7 +41,9 @@ end
 
 
 
-local _lib_load_path = ''
+local _self_lib_load_path = ''
+local _self_lib_name = ''
+
 
 
 
@@ -155,15 +163,23 @@ local function _get_patched_package_env(package_dotted_path)
             if string.sub(modname, 1, 1) == '.' then modname = package_dotted_path .. modname end
             return _call_function_in_env(core.load_global_script, patched_env, self, modname, ...)          ---@diagnostic disable-line: undefined-global
         end
-        
+
+        local patched__get_env = function () return patched_env end
+
         parent_env = core:get_env()
+        local patched_core = _patch({'core', 'load_global_script'}, patched__load_global_script, parent_env)
+        patched_core.get_env = patched__get_env
+
         patched_keys = {
-            core=_patch({'core', 'load_global_script'}, patched__load_global_script, parent_env),
+            core=patched_core,
         }
     end
 
     patched_keys.require = patched__require
-    patched_keys.package = _patch({'package', 'loaded', _lib_load_path, 'load', 'init_lib_file'}, patched__init_lib_file, parent_env)
+
+    local patched_package = _patch({'package', 'loaded', _self_lib_load_path, 'load', 'init_lib_file'}, patched__init_lib_file, parent_env)
+    patched_keys.package = patched_package
+    patched_keys[_self_lib_name] = patched_package.loaded[_self_lib_load_path]
 
     return setmetatable(patched_keys, {__index=parent_env})
 end
@@ -182,8 +198,11 @@ end
 ---@return nil | any # anything that returns a package or anything returned by an initialization function (if `exec=true`)
 ---* __~may be buggy~, but should't)__
 ---* package will be loaded in patched environment that allows relative imports
----* to use relative import put a dot (`.`) at the beginning of the module path, for example: `require('.local_module')`
----* if something goes wrong, no error will be thrown - use the `assert` statement to check if everything is ok
+---     * to use relative import put a **dot (.)** at the beginning of the module path, for example: **require('.local_module')**
+---* if something goes wrong, no error will be thrown -> use **assert** statement to check if everything is ok
+---* this library will be injected into the loaded package scope -> **assert(\<lib_folder_name\>) == \<lib\>**
+---     * **\<lib_folder_name\>** - name of folder where you placed zenq_lib (eg: _script/my_mod/zlib_ -> _\<lib_folder_name\>_ = **'zlib'**)
+---     * **\<lib\>** - table representing zenq_lib (what is returned after importing _\<lib_folder_name\>.header_)
 ---* _NOTE: You should not use this function for import 'zlib' package itself_
 function load.init_lib_file(dotted_directory_path, init_file_name, exec, ...)
     if package.loaded[dotted_directory_path] then
@@ -211,8 +230,9 @@ end
 
 
 ---@private
-function load.__setup_lib_load_path(self_lib_load_path)
-    _lib_load_path = self_lib_load_path
+function load.__set_lib_load_path(self_lib_load_path, self_lib_name)
+    _self_lib_load_path = self_lib_load_path
+    _self_lib_name = self_lib_name
 end
 
 return load

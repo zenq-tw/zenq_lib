@@ -182,7 +182,7 @@ local _sub_tbl_close_slim = _sub_tbl_close:gsub('%s', '')
 --- @param strict? boolean
 --- @return string?
 ---_[should be faster by about 20%]_
-function t.dump_table(tbl, slim, strict)
+function t.dump(tbl, slim, strict)
     if type(tbl) ~= 'table' then return end
     if type(slim) ~= 'boolean' then slim = false end
     if type(strict) ~= 'boolean' then strict = false end

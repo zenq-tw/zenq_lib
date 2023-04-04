@@ -140,107 +140,170 @@ t.unpack = table_unpack
 
 
 
---- Author: Vandy (Groove Wizard)
+local key_str_open = '["'
+
+local _key_str_close = '"] = '
+local _key_str_close_slim = _key_str_close:gsub('%s', '')
+
+local key_other_open = '['
+
+local _key_other_close = '] = '
+local _key_other_close_slim = _key_other_close:gsub('%s', '')
+
+
+
+local val_str_open = '[=['
+
+local _val_str_close = ']=],\n'
+local _val_str_close_slim = _val_str_close:gsub('%s', '')
+
+local _val_other_close = ',\n'
+local _val_other_close_slim = _val_other_close:gsub('%s', '')
+
+local _val_unsupported = 'nil,\n'
+local _val_unsupported_slim = _val_unsupported:gsub('%s', '')
+
+
+
+local _tbl_open  = '{\n'
+local _tbl_open_slim = _tbl_open:gsub('%s', '')
+
+local _tbl_close  = '}\n'
+local _tbl_close_slim = _tbl_close:gsub('%s', '')
+
+local _sub_tbl_close = '},\n'
+local _sub_tbl_close_slim = _sub_tbl_close:gsub('%s', '')
+
+
+
+---Original Author: Vandy (Groove Wizard)
 --- @param tbl table
---- @param loop_value number
---- @return table<string>
-local function _inner_dump_table(tbl, loop_value)
-    --- @type table<any>
-	local table_string = {'{\n'}
-	--- @type table<any>
-	local temp_table = {}
-    for key, value in pairs(tbl) do
-        table_string[#table_string + 1] = string.rep('\t', loop_value + 1)
+--- @param slim? boolean
+--- @param strict? boolean
+--- @return string?
+---_[should be faster by about 20%]_
+function t.dump_table(tbl, slim, strict)
+    if type(tbl) ~= 'table' then return end
+    if type(slim) ~= 'boolean' then slim = false end
+    if type(strict) ~= 'boolean' then strict = false end
 
-        if type(key) == "string" then
-            table_string[#table_string + 1] = '["'
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '"] = '
-        elseif type(key) == "number" then
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '] = '
-        else
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = tostring(key)
-            table_string[#table_string + 1] = '] = '
-        end
+    local t_char = '\t'
+    local key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close
 
-		if type(value) == "table" then
-			temp_table = _inner_dump_table(value, loop_value + 1)
-			for i = 1, #temp_table do
-				table_string[#table_string + 1] = temp_table[i]
-			end
-		elseif type(value) == "string" then
-			table_string[#table_string + 1] = '[=['
-			table_string[#table_string + 1] = value
-			table_string[#table_string + 1] = ']=],\n'
-		else
-			table_string[#table_string + 1] = tostring(value)
-			table_string[#table_string + 1] = ',\n'
-		end
+    if slim then
+        key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close = _key_str_close_slim, _key_other_close_slim, _val_str_close_slim, _val_other_close_slim, _val_unsupported_slim, _tbl_open_slim, _tbl_close_slim, _sub_tbl_close_slim
+    else
+        key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close = _key_str_close, _key_other_close, _val_str_close, _val_other_close, _val_unsupported, _tbl_open, _tbl_close, _sub_tbl_close
     end
 
-	table_string[#table_string + 1] = string.rep('\t', loop_value)
-    table_string[#table_string + 1] = "},\n"
-
-    return table_string
-end
 
 
+    local table_string = {tbl_open}  ---@type (string|number)[]
+
+    local stack_lvl = 1
+    local next_i = 2
+    local depth_t = t_char
+    
+    local current_tbl = tbl
+    local table_stack = {}
+    local key_stack = {}
+    
+    local key, value
+    local key_type, value_type
 
 
---- Author: Vandy (Groove Wizard)
---- @param tbl table
---- @return string|boolean
-function t.dump_table(tbl)
-    if not (type(tbl) == "table") then
-        return false
-    end
+    while stack_lvl ~= 0 do
+        key, value = next(current_tbl, key)
 
-    --- @type table<any>
-    local table_string = {'{\n'}
-	--- @type table<any>
-	local temp_table = {}
+        while key ~= nil do
 
-    for key, value in pairs(tbl) do
+            key_type = type(key)
+            if key_type == "string" then
+                table_string[next_i]     = depth_t
+                table_string[next_i + 1] = key_str_open
+                table_string[next_i + 2] = key
+                table_string[next_i + 3] = key_str_close
 
-        table_string[#table_string + 1] = string.rep('\t', 1)
-        if type(key) == "string" then
-            table_string[#table_string + 1] = '["'
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '"] = '
-        elseif type(key) == "number" then
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '] = '
-        else
-            --- TODO skip it somehow?
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = tostring(key)
-            table_string[#table_string + 1] = '] = '
-        end
+            elseif key_type == "number" then
+                table_string[next_i]     = depth_t
+                table_string[next_i + 1] = key_other_open
+                table_string[next_i + 2] = key
+                table_string[next_i + 3] = key_other_close
 
-        if type(value) == "table" then
-            temp_table = _inner_dump_table(value, 1)
-            for i = 1, #temp_table do
-                table_string[#table_string + 1] = temp_table[i]
+            elseif key_type == "boolean" then
+                table_string[next_i]     = depth_t
+                table_string[next_i + 1] = key_other_open
+                table_string[next_i + 2] = tostring(key)
+                table_string[next_i + 3] = key_other_close
+
+            elseif strict then
+                error("<dump_table>: invalid table key type = '" .. key_type .. "' (key=" .. tostring(key) .. ')')
+
+            else
+                skip = true
             end
-        elseif type(value) == "string" then
-            table_string[#table_string + 1] = '[=['
-            table_string[#table_string + 1] = value
-            table_string[#table_string + 1] = ']=],\n'
-        elseif type(value) == "boolean" or type(value) == "number" then
-            table_string[#table_string + 1] = tostring(value)
-            table_string[#table_string + 1] = ',\n'
-        else
-            -- unsupported type, technically.
-            table_string[#table_string+1] = "nil,\n"
+
+
+
+            if skip then
+                skip = false
+
+            else
+                next_i = next_i + 4
+                value_type = type(value)
+
+                if value_type == "table" then
+                    table_string[next_i]     = tbl_open
+                    next_i                   = next_i + 1
+
+                    table_stack[stack_lvl]   = current_tbl
+                    key_stack[stack_lvl]     = key
+                    current_tbl              = value
+                    depth_t                  = depth_t .. t_char
+                    stack_lvl                = stack_lvl + 1
+                    key                      = nil
+
+                elseif value_type == "string" then
+                    table_string[next_i]     = val_str_open
+                    table_string[next_i + 1] = value
+                    table_string[next_i + 2] = val_str_close
+                    next_i                   = next_i + 3
+
+                elseif value_type == "number" then
+                    table_string[next_i]     = value
+                    table_string[next_i + 1] = val_other_close
+                    next_i                   = next_i + 2
+
+                elseif value_type == "boolean" then
+                    table_string[next_i]     = tostring(value)
+                    table_string[next_i + 1] = val_other_close
+                    next_i                   = next_i + 2
+
+                elseif strict then
+                    error("<dump_table>: invalid table value type = '" .. type(value) .. "' (value=" .. tostring(value) .. ')')
+
+                else
+                    -- unsupported type, technically.
+                    table_string[next_i]     = val_unsupported
+                    next_i                   = next_i + 1
+                end
+            end
+
+            key, value = next(current_tbl, key)
         end
+
+        stack_lvl   = stack_lvl - 1
+        depth_t     = string.sub(depth_t, 1, stack_lvl)
+
+        key         = key_stack[stack_lvl]
+        current_tbl = table_stack[stack_lvl] 
+
+        table_string[next_i]     = depth_t
+        table_string[next_i + 1] = sub_tbl_close
+        next_i = next_i + 2
     end
 
-    table_string[#table_string + 1] = "}\n"
-
+    table_string[next_i - 1] = tbl_close
     return table.concat(table_string)
 end
 

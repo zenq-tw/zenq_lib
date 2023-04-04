@@ -309,6 +309,46 @@ end
 
 
 
+--------------------------------------------------------------------------------------------------------------------------------------
+--                                                              comparison
+--------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+---compare two tables
+---@param t1 table
+---@param t2 table
+---@return boolean
+function t.compare(t1, t2)
+    if not (type(t1) == 'table' and type(t2) == "table") then return false end
+
+    -- local str
+    -- local dump_keys_path = function (kpath, curr_key) str = table.concat(kpath, ']['); if str == '' then return '[' .. tostring(curr_key) .. ']' else return '[' .. str .. '][' .. tostring(curr_key) .. ']' end end
+    -- local keys_path = {}
+
+    local function _compare(tbl1, tbl2)
+        for k in pairs(tbl1) do
+            -- assert(type(tbl1[k]) == type(tbl2[k]), '   type(t1' .. dump_keys_path(keys_path, k) .. ') != type(t2'.. dump_keys_path(keys_path, k) ..')  ||  ' .. type(tbl1[k]) .. ' != ' .. type(tbl2[k]))
+            assert(type(tbl1[k]) == type(tbl2[k]))
+            if type(tbl1[k]) == 'table' then
+                -- if type(k) == "string" then str = "'" .. k .. "'" else str = tostring(k) end
+                -- table.insert(keys_path, str)
+                _compare(tbl1[k], tbl2[k])
+                -- table.remove(keys_path)
+            else
+                -- assert(tbl1[k] == tbl2[k], '   t1' .. dump_keys_path(keys_path, k) .. ' != t2'.. dump_keys_path(keys_path, k) ..'   ||   ' .. tostring(tbl1[k]) .. ' != ' .. tostring(tbl2[k]))
+                assert(tbl1[k] == tbl2[k])
+            end
+        end
+    end
+
+    -- return pcall(_compare, t1, t2)
+    
+    return pcall(_compare, t1, t2)[1]
+end
+
+
+
 --==================================================================================================================================--
 --                                                 Public namespace initialization
 --==================================================================================================================================--

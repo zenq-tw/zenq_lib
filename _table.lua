@@ -177,7 +177,7 @@ local _sub_tbl_close_slim = _sub_tbl_close:gsub('%s', '')
 
 
 ---Original Author: Vandy (Groove Wizard)
---- @param tbl table
+--- @param tbl DumpableTable
 --- @param slim? boolean
 --- @param strict? boolean
 --- @return string?

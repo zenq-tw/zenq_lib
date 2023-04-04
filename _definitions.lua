@@ -14,3 +14,7 @@
 ---@alias AvailableOpenFileMod
 ---| 'w' open for write (will clear all existed content)
 ---| 'a' same, but will append to file
+
+
+---@alias SimpleType string | number | boolean
+---@alias DumpableTable table<SimpleType, SimpleType>

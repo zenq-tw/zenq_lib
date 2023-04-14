@@ -190,7 +190,7 @@ function t.dump(tbl, slim, strict)
     if type(tbl) ~= 'table' then return end
     if type(slim) ~= 'boolean' then slim = false end
     if type(strict) ~= 'boolean' then strict = false end
-
+    
     local table_concat, string_sub, type, tostring, next = table.concat, string.sub, type, tostring, next
 
 
@@ -227,13 +227,13 @@ function t.dump(tbl, slim, strict)
             if key_type == "string" then
                 table_string[next_i]     = depth_t
                 table_string[next_i + 1] = key_str_open
-                table_string[next_i + 2] = key
+                table_string[next_i + 2] = key                  --[[@as string]]
                 table_string[next_i + 3] = key_str_close
 
             elseif key_type == "number" then
                 table_string[next_i]     = depth_t
                 table_string[next_i + 1] = key_other_open
-                table_string[next_i + 2] = key
+                table_string[next_i + 2] = key                  --[[@as number]]
                 table_string[next_i + 3] = key_other_close
 
             elseif key_type == "boolean" then
@@ -264,19 +264,19 @@ function t.dump(tbl, slim, strict)
 
                     table_stack[stack_lvl]   = current_tbl
                     key_stack[stack_lvl]     = key
-                    current_tbl              = value
+                    current_tbl              = value            --[[@as DumpableTable]]
                     depth_t                  = depth_t .. t_char
                     stack_lvl                = stack_lvl + 1
                     key                      = nil
 
                 elseif value_type == "string" then
                     table_string[next_i]     = val_str_open
-                    table_string[next_i + 1] = value
+                    table_string[next_i + 1] = value            --[[@as string]]
                     table_string[next_i + 2] = val_str_close
                     next_i                   = next_i + 3
 
                 elseif value_type == "number" then
-                    table_string[next_i]     = value
+                    table_string[next_i]     = value            --[[@as number]]
                     table_string[next_i + 1] = val_other_close
                     next_i                   = next_i + 2
 

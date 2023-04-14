@@ -35,12 +35,12 @@ end
 ---Safe execution of supplied function (all errors will be catched and returned as state and msg)
 ---@param func fun(...)
 ---@param ... any
----@return boolean is_success, string? err_msg, any[]? returned_data
+---@return boolean is_success, string? err_msg, any[] returned_data # returned_data or empty dict
 function functools.safe(func, ...) 
     local results = zlib_table.pack(pcall(func, ...))
 
     if results[1] == false then
-        return false, results[2], nil
+        return false, results[2], {}
     end
 
     results.n = nil

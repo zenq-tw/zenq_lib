@@ -17,4 +17,4 @@
 
 
 ---@alias SimpleType string | number | boolean
----@alias DumpableTable table<SimpleType, SimpleType>
+---@alias DumpableTable table<SimpleType, SimpleType | DumpableTable>

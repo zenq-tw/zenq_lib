@@ -175,6 +175,10 @@ local _sub_tbl_close = '},\n'
 local _sub_tbl_close_slim = _sub_tbl_close:gsub('%s', '')
 
 
+local _t_char = '\t'
+local _t_char_slim = _t_char:gsub('%s', '')
+
+
 
 ---Original Author: Vandy (Groove Wizard)
 --- @param tbl DumpableTable
@@ -187,13 +191,12 @@ function t.dump(tbl, slim, strict)
     if type(slim) ~= 'boolean' then slim = false end
     if type(strict) ~= 'boolean' then strict = false end
 
-    local t_char = '\t'
-    local key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close
+    local key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close, t_char
 
     if slim then
-        key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close = _key_str_close_slim, _key_other_close_slim, _val_str_close_slim, _val_other_close_slim, _val_unsupported_slim, _tbl_open_slim, _tbl_close_slim, _sub_tbl_close_slim
+        key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close, t_char = _key_str_close_slim, _key_other_close_slim, _val_str_close_slim, _val_other_close_slim, _val_unsupported_slim, _tbl_open_slim, _tbl_close_slim, _sub_tbl_close_slim, _t_char_slim
     else
-        key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close = _key_str_close, _key_other_close, _val_str_close, _val_other_close, _val_unsupported, _tbl_open, _tbl_close, _sub_tbl_close
+        key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close, t_char = _key_str_close, _key_other_close, _val_str_close, _val_other_close, _val_unsupported, _tbl_open, _tbl_close, _sub_tbl_close, _t_char
     end
 
 
@@ -291,6 +294,8 @@ function t.dump(tbl, slim, strict)
 
             key, value = next(current_tbl, key)
         end
+
+        table_string[next_i - 1] = string.sub(table_string[next_i - 1], 1, -2)  -- remove last ','
 
         stack_lvl   = stack_lvl - 1
         depth_t     = string.sub(depth_t, 1, stack_lvl)

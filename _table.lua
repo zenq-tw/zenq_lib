@@ -191,6 +191,9 @@ function t.dump(tbl, slim, strict)
     if type(slim) ~= 'boolean' then slim = false end
     if type(strict) ~= 'boolean' then strict = false end
 
+    local table_concat, string_sub, type, tostring, next = table.concat, string.sub, type, tostring, next
+
+
     local key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close, t_char
 
     if slim then
@@ -295,10 +298,10 @@ function t.dump(tbl, slim, strict)
             key, value = next(current_tbl, key)
         end
 
-        table_string[next_i - 1] = string.sub(table_string[next_i - 1], 1, -2)  -- remove last ','
+        table_string[next_i - 1] = string_sub(table_string[next_i - 1], 1, -2)  -- remove last ','
 
         stack_lvl   = stack_lvl - 1
-        depth_t     = string.sub(depth_t, 1, stack_lvl)
+        depth_t     = string_sub(depth_t, 1, stack_lvl)
 
         key         = key_stack[stack_lvl]
         current_tbl = table_stack[stack_lvl] 
@@ -309,7 +312,7 @@ function t.dump(tbl, slim, strict)
     end
 
     table_string[next_i - 1] = tbl_close
-    return table.concat(table_string)
+    return table_concat(table_string)
 end
 
 

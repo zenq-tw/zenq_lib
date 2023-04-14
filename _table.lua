@@ -187,11 +187,11 @@ local _t_char_slim = _t_char:gsub('%s', '')
 --- @return string?
 ---_[should be faster by about 20%]_
 function t.dump(tbl, slim, strict)
+    local table_concat, string_sub, type, tostring, next = table.concat, string.sub, type, tostring, next
+
     if type(tbl) ~= 'table' then return end
     if type(slim) ~= 'boolean' then slim = false end
     if type(strict) ~= 'boolean' then strict = false end
-    
-    local table_concat, string_sub, type, tostring, next = table.concat, string.sub, type, tostring, next
 
 
     local key_str_close, key_other_close, val_str_close, val_other_close, val_unsupported, tbl_open, tbl_close, sub_tbl_close, t_char

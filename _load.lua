@@ -1,3 +1,6 @@
+local _shared_lib_ext = package.config:sub(1,1) == '/' and '.so' or '.dll'
+
+
 ---@class load
 local load = {}
 
@@ -38,6 +41,39 @@ function load.lib(lib, exec, ...)
     return load.init_lib_file(lib, 'header', exec, ...)
 end
 
+
+---what it does:
+--- 1. load binary data from file
+--- 2. store shared object on disk: `.dll` for Win or `.so` for *nix
+--- 3. call `require` on it
+--- 4. check that return value of `require` is of a table type
+--- #### NOTE: your dumped C extension _must_ be prepared for such operation
+---@param script_path string lua script path
+---@param module_name string will be stored on disk as <module_name>.dll
+---@param skip_check? boolean if `true` will skip check for `require` return value (default `false`)
+---@return any # anything that C extension will return 
+function load.dumped_c_extension(script_path, module_name, skip_check)
+    if type(skip_check) ~= "boolean" then skip_check = false end
+    local err_text = 'failed to load ' .. module_name .. _shared_lib_ext
+
+    if string.sub(script_path, -4, -1) == '.lua' then
+        script_path = string.sub(script_path, 1, -5)
+    end
+
+    local code_chunk = assert(loadfile(script_path), err_text)
+    local content    = assert(code_chunk(),          err_text)      --[[@as string]]
+
+    local so = assert(io.open(module_name .. _shared_lib_ext, 'wb'), err_text)
+    so:write(content)
+    so:close()
+
+    local module = require(module_name)
+    if not skip_check then
+        assert(type(module) == "table", err_text)
+    end
+
+    return module
+end
 
 
 

@@ -104,7 +104,7 @@ function collections.NonRewritableDict (dict_id_hint, nil_values, allow_same_val
         __call=function () data = {} end,  -- clear dict content
         __index=get_value,
         __newindex=function (non_rewritable_dict, key, new_value)
-            current_value = rawget(data, key)
+            local current_value = rawget(data, key)
             print(key, tostring(current_value), tostring(new_value))
             assert(
                 is_valid_assignment(current_value, new_value),

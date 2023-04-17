@@ -216,6 +216,7 @@ function t.dump(tbl, slim, strict)
     
     local key, value
     local key_type, value_type
+    local skip
 
 
     while stack_lvl ~= 0 do

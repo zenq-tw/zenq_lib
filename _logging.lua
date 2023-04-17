@@ -335,7 +335,7 @@ function logging.Logger:_log(args, lvl, add_traceback)
         dumped_values[i] = argument
     end
 
-    msg = table.concat(dumped_values, ' ')
+    local msg = table.concat(dumped_values, ' ')
     msg = self:_prepend_context(msg) .. '\n'
     if add_traceback then
         msg = msg .. '\n' .. debug.traceback('', 3)
@@ -369,7 +369,7 @@ function logging.Logger:_open_log_file(mod)
         error('attempted to open file in unkown mode: ' .. tostring(mod))  --FIXME: is it good?)
     end
 
-    file, error_desc = io.open(self._log_file_name, mod)
+    local file, error_desc = io.open(self._log_file_name, mod)
     assert(file, 'failed to open a file' .. tostring(self._log_file_name) .. '(' .. (error_desc or '<unknown>') .. ')')
 
     return file

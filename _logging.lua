@@ -29,6 +29,9 @@ logging.log_lvl_lookup = ztable.indexed_to_lookup(LogLvl)
 ---@type number
 local LOGGING_DEACTIVATED_LVL = 0/0  --  == `NaN` == `-1.#IND` ->  all numeric comparisons will return false
 
+local INDENT = '  '
+local INDENT_SIZE = #INDENT
+local LEN_WITHOUT_ONE_INDENT = -(1 + INDENT_SIZE)
 
 
 ---@param value any
@@ -40,6 +43,9 @@ local function is_valid_log_lvl(value)
     return true
 end
 
+
+
+---@alias LoggerState {log_lvl: integer, indent_lvl: integer, context_stack: string[]}
 
 
 
@@ -233,7 +239,7 @@ end
 ---@return self
 function logging.Logger:add_indent()
     self._indent_lvl = self._indent_lvl + 1
-    self._indent = self._indent .. '  '
+    self._indent = self._indent .. INDENT
 
     return self
 end
@@ -244,7 +250,7 @@ function logging.Logger:remove_indent()
     if self._indent_lvl == 0    then    return self     end
 
     self._indent_lvl = self._indent_lvl - 1
-    self._indent = self._indent:sub(1, -3)
+    self._indent = self._indent:sub(1, LEN_WITHOUT_ONE_INDENT)
 
     return self
 end
@@ -269,6 +275,37 @@ function logging.Logger:leave_context()
 
     return self
 end
+
+
+---@return LoggerState
+function logging.Logger:get_state()
+    return {
+        log_lvl=self._current_log_level,
+        indent_lvl=self._indent_lvl,
+        context_stack=ztable.deepcopy(self._context_stack),
+    }
+end
+
+
+---@param state LoggerState
+---@return self
+function logging.Logger:set_state(state)
+    if not is_valid_log_lvl(state.log_lvl) then state.log_lvl = LOGGING_DEACTIVATED_LVL end
+
+    self._indent = string.rep(INDENT, state.indent_lvl)
+    self._indent_lvl = state.indent_lvl
+    
+    local chain = ''
+    if #state.context_stack > 0 then
+        chain = '[' .. table.concat(state.context_stack, '][') .. ']'
+    end
+
+    self._context_stack = state.context_stack
+    self._context_chain_dumped = chain
+
+    return self
+end
+
 
 --[[
 ======================================================================================

@@ -32,21 +32,52 @@ end
 -- @return ...<T> returned_data
 --```
 
----Safe execution of supplied function (all errors will be catched and returned as state and msg)
 ---@param func fun(...)
 ---@param ... any
 ---@return boolean is_success, string? err_msg, any[] returned_data # returned_data or empty dict
-function functools.safe(func, ...) 
+local function _safe(func, ...) 
     local results = zlib_table.pack(pcall(func, ...))
 
     if results[1] == false then
         return false, results[2], {}
     end
 
-    results.n = nil
     table.remove(results, 1)
+    results.n = results.n - 1
 
     return true, nil, results
+end
+
+
+---Safe execution of supplied function
+---@param func fun(...)
+---@param ... any
+---@return boolean is_success, string? err_msg, any ...
+function functools.safe(func, ...) 
+    local is_success, err_msg, retvals = _safe(func, ...)
+    if is_success then return true, nil, zlib_table.unpack(retvals) end
+    return false, err_msg, nil
+end
+
+
+---Safe execution of supplied function
+---@param func fun(...)
+---@param ... any
+---@return boolean is_success, string? err_msg, string? tb, any ...
+function functools.safe_tb(func, ...)
+    local is_success, err_msg, retvals = _safe(func, ...)
+    if is_success then return true, nil, nil, zlib_table.unpack(retvals) end
+
+    return false, err_msg, debug.traceback('', 2), nil
+end
+
+
+---Safe execution of supplied function
+---@param func fun(...)
+---@param ... any
+---@return boolean is_success, string? err_msg, any[] returned_data # returned by function values packed into indexed table (or empty table if execution was failed)
+function functools.safe_N(func, ...)
+    return _safe(func, ...)
 end
 
 

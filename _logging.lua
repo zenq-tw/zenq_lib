@@ -286,45 +286,6 @@ end
 
 
 ---@protected
----@param tbl table
----@return string
-function logging.Logger:_dump_table(tbl)
-    local buffer, buffer_new_id, result_string_len = {}, 0, 0
-    local temp_string
-
-    for key, value in pairs(tbl) do
-        temp_string = tostring(key) .. ': ' .. tostring(value)
-        
-        result_string_len = result_string_len + #temp_string
-        buffer_new_id = buffer_new_id + 1
-
-        if result_string_len > DEFAULT_MAX_DUMPED_TABLE_LEN then
-            buffer[buffer_new_id] = '... <truncated> ...'
-            break
-        end
-        
-        buffer[buffer_new_id] = temp_string
-    end
-
-    return  '{' .. table.concat(buffer, ', ') .. '}'
-end
-
-
----@protected
----@param func fun(...)
----@return string
-function logging.Logger:_get_function_result(func)
-    local is_success_eval, returned_data = pcall(func)
-
-    if is_success_eval then
-        return returned_data
-    end
-
-    return tostring(func)
-end
-
-
----@protected
 ---@param args any[] values for log record
 ---@param lvl LogLvl
 ---@param add_traceback? boolean
@@ -384,6 +345,45 @@ function logging.Logger:_traceback(tb, err_msg)
     self._write_log(err_msg)
 
     return self
+end
+
+
+---@protected
+---@param tbl table
+---@return string
+function logging.Logger:_dump_table(tbl)
+    local buffer, buffer_new_id, result_string_len = {}, 0, 0
+    local temp_string
+
+    for key, value in pairs(tbl) do
+        temp_string = tostring(key) .. ': ' .. tostring(value)
+        
+        result_string_len = result_string_len + #temp_string
+        buffer_new_id = buffer_new_id + 1
+
+        if result_string_len > DEFAULT_MAX_DUMPED_TABLE_LEN then
+            buffer[buffer_new_id] = '... <truncated> ...'
+            break
+        end
+        
+        buffer[buffer_new_id] = temp_string
+    end
+
+    return  '{' .. table.concat(buffer, ', ') .. '}'
+end
+
+
+---@protected
+---@param func fun(...)
+---@return string
+function logging.Logger:_get_function_result(func)
+    local is_success_eval, returned_data = pcall(func)
+
+    if is_success_eval then
+        return returned_data
+    end
+
+    return tostring(func)
 end
 
 

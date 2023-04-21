@@ -137,6 +137,18 @@ function logging.Logger:exception(...)
 end
 
 
+---Log provided traceback.
+--- * leading NL will be removed
+--- * log level for traceback = `LogLvl.error`
+---@param tb string traceback retrieved with `debug.traceback()`
+---@param err_msg string? optional message that will be logged before traceback (with ` > ` at the start)
+---@return self 
+function logging.Logger:traceback(tb, err_msg)
+    if not self:is_enabled_for(LogLvl.error) then return self end
+    return self:_traceback(tb, err_msg)
+end
+
+
 ---Extended version logging method - more control over the process of building a log message
 ---@param msg any
 ---@param log_lvl? integer (`debug` is default)
@@ -265,6 +277,14 @@ end
 --]]
 
 
+---@param msg string
+---@return string
+local function _remove_opening_nl_if_present(msg)
+    if msg:sub(1, 1) == '\n' then return msg:sub(2, -1) end
+    return msg
+end
+
+
 ---@protected
 ---@param tbl table
 ---@return string
@@ -336,12 +356,32 @@ function logging.Logger:_log(args, lvl, add_traceback)
     end
 
     local msg = table.concat(dumped_values, ' ')
-    msg = self:_prepend_context(msg) .. '\n'
     if add_traceback then
-        msg = msg .. '\n' .. debug.traceback('', 3)
+        msg = 'Error:\n > ' .. _remove_opening_nl_if_present(debug.traceback(msg, 3)) .. '\n'
+    else 
+        msg = self._indent .. msg
     end
 
+    msg = self:_prepend_context(msg) .. '\n'
+
     self._write_log(msg)
+
+    return self
+end
+
+
+---@protected
+---@param tb string
+---@param err_msg string?
+function logging.Logger:_traceback(tb, err_msg)
+    if type(err_msg) == 'string' then
+        err_msg = ' > ' .. err_msg .. '\n'
+    else 
+        err_msg = '\n' 
+    end
+
+    err_msg = err_msg .. _remove_opening_nl_if_present(tb) .. '\n\n'
+    self._write_log(err_msg)
 
     return self
 end
